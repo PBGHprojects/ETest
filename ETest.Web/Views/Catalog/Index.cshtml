@@ -1,0 +1,105 @@
+﻿@{
+    ViewBag.Title = "Catalog";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var productsAvailable = ((MultiSelectList)ViewBag.Products)?.Any() ?? false;
+}
+
+<h2>@ViewBag.Title</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+
+@Html.Partial("_DeleteModal", new ViewDataDictionary {
+    { "Title", "Delete Catalog" },
+    { "Message", "Are you sure you want to delete this catalog?" }
+})
+
+@Html.AntiForgeryToken()
+
+@if (productsAvailable)
+{
+    <div>
+        @Html.Label("Search by products")
+        <div>
+            @Html.ListBox("product-ids", (MultiSelectList)ViewBag.Products)
+        </div>
+        <br />
+        <div>
+            <button class="btn btn-default" type="reset" onclick="searchRequest()">Clear</button>
+        </div>
+        <br />
+    </div>
+}
+
+<table class="table">
+    <thead class="bg-primary">
+        <tr>
+            <th>Id</th>
+            <th>Code</th>
+            <th>Description</th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody id="catalogs-table-body">
+        @Html.Partial("_Index")
+    </tbody>
+</table>
+
+@Html.Hidden("delete-catalog-id")
+
+@section Scripts {
+    <script type="text/javascript">
+        const searchRequest = (e) => {
+            const ids = e ?
+                Array
+                    .from(e.target.selectedOptions)
+                    .map(o => parseInt(o.value))
+                : [];
+
+            $.ajax({
+                type: 'GET',
+                url: '/Catalog/Search',
+                traditional: true,
+                data: { productIds: ids },
+                success: (data) => {
+                    $('#catalogs-table-body').html(data)
+                },
+                error: () => {
+                    toastr.error('An error occurred while attempting to fetch data.', 'Error');
+                }
+            });
+        };
+
+        $('#product-ids').change((e) => {
+            searchRequest(e);
+        });
+
+        function confirmDelete(id) {
+            $('#delete-catalog-id').val(id);
+            $('#delete-modal').modal('show');
+        }
+
+        function deleteEntry() {
+            const id = $('#delete-catalog-id').val();
+            if (id) {
+                $.ajax({
+                    type: 'DELETE',
+                    url: `/Catalog/Delete/${id}`,
+                    data: {
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    error: () => {
+                        $('#delete-modal').modal('hide');
+                        toastr.error('An error occurred while attempting to delete catalog. Check if some products belong only to this catalog.', 'Error');
+                    },
+                    success: () => {
+                        window.location.reload();
+                    }
+                });
+            }
+        }
+    </script>
+}
