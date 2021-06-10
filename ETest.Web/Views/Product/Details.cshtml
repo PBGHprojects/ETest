@@ -1,0 +1,31 @@
+﻿@model ETest.Web.Models.ProductWithCatalogViewModel
+
+@{
+    ViewBag.Title = "Product Details";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<dl class="dl-horizontal">
+    <dt>@Html.DisplayNameFor(model => model.Id)</dt>
+    <dd>@Html.DisplayFor(model => model.Id)</dd>
+
+    <dt>@Html.DisplayNameFor(model => model.Code)</dt>
+    <dd>@Html.DisplayFor(model => model.Code)</dd>
+
+    <dt>@Html.DisplayNameFor(model => model.Description)</dt>
+    <dd>@Html.DisplayFor(model => model.Description)</dd>
+
+    <dt>@Html.DisplayNameFor(model => model.Catalogs)</dt>
+    <dd>
+        @if (Model.Catalogs?.Any() ?? false)
+        {
+            <ul class="list-unstyled">
+                @foreach (var catalog in Model.Catalogs)
+                {
+                    <li>@Html.ActionLink(catalog.Code, "Details", "Catalog", new { id = catalog.Id }, null)</li>
+                }
+            </ul>
+        }
+    </dd>
+</dl>
